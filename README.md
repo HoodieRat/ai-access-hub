@@ -2,7 +2,7 @@
 
 A local, unified API router for 13 AI providers. Drop-in OpenAI-compatible endpoint that routes requests across free, membership, and local providers — with smart fallback, caching, quota tracking, and a browser dashboard.
 
-See `COMMANDS.md` for the canonical command list, `FOR-DUMMIES.md` for the plain-language hookup and stack guide, and `todo.md` for the live implementation checklist.
+See [COMMANDS.md](COMMANDS.md) for the canonical command list, [FOR-DUMMIES.md](FOR-DUMMIES.md) for the plain-language hookup and stack guide, and [todo.md](todo.md) for the live implementation checklist.
 
 ---
 
@@ -41,7 +41,7 @@ The checked-in launchers now return success only after `GET /health` reports `st
 
 The hub exposes an OpenAI-compatible API. Point any OpenAI SDK at it:
 
-If you want the plain-language hookup steps, project connection examples, and the top free orchestration recommendations for Windows and Linux, see `SETUP.md`.
+If you want the plain-language hookup steps, project connection examples, and the top free orchestration recommendations for Windows and Linux, see [SETUP.md](SETUP.md).
 
 ```python
 from openai import OpenAI
