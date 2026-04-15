@@ -21,10 +21,11 @@ import {
   maskSecret,
 } from '../secrets';
 import { startCopilotDeviceAuth, pollCopilotDeviceAuth } from '../adapters/copilot';
-import { classifyRequest } from '../router';
+import { classifyRequest, previewRoute } from '../router';
 import type { RouteRequest } from '../types';
 import { cleanExpiredCache, getCacheStats } from '../cache';
 import { cleanExpiredWindows } from '../limits';
+import { getEffectiveModes } from '../modes';
 
 // Re-export for server to import
 export { startCopilotDeviceAuth, pollCopilotDeviceAuth } from '../adapters/copilot';
@@ -73,9 +74,10 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: RouteRequest }>('/v1/admin/force-route', async (req, reply) => {
     // Preview routing decision without executing
     const body = req.body;
-    const classified = classifyRequest(body);
+    const preview = await previewRoute(body);
     reply.send({
-      classified_as: classified,
+      classified_as: preview.classifiedAs,
+      preview,
       request_body: body,
       note: 'Use preferred_provider and model fields in your request to force routing',
     });
@@ -95,20 +97,22 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       if (local_only !== undefined) setSetting('local_only', String(local_only));
       if (premium_enabled !== undefined) setSetting('premium_enabled', String(premium_enabled));
 
+      const modes = getEffectiveModes();
+
       reply.send({
-        free_only: getSetting('free_only') === 'true',
-        local_only: getSetting('local_only') === 'true',
-        premium_enabled: getSetting('premium_enabled') === 'true',
+        free_only: modes.freeOnly,
+        local_only: modes.localOnly,
+        premium_enabled: modes.premiumEnabled,
       });
     },
   );
 
   app.get('/v1/admin/modes', async (_req, reply) => {
-    const cfg = getConfig();
+    const modes = getEffectiveModes();
     reply.send({
-      free_only: getSetting('free_only') === 'true' || cfg.freeOnly,
-      local_only: getSetting('local_only') === 'true' || cfg.localOnly,
-      premium_enabled: getSetting('premium_enabled') === 'true' || cfg.premiumEnabled,
+      free_only: modes.freeOnly,
+      local_only: modes.localOnly,
+      premium_enabled: modes.premiumEnabled,
     });
   });
 

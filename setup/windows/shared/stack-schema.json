@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Windows stack setup manifest",
+  "type": "object",
+  "required": ["id", "displayName", "components"],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "displayName", "required"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "ports": {
+            "type": "array",
+            "items": {
+              "type": ["integer", "string"]
+            }
+          },
+          "healthUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pathCandidates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "commandCandidates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "processPatterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dockerContainers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

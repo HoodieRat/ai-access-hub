@@ -6,7 +6,7 @@
  */
 
 import { createHash, randomBytes } from 'crypto';
-import type { AdapterRequest, AdapterResponse } from './types';
+import type { AdapterRequest, AdapterResponse, QualityTier } from './types';
 import { getDb } from './db';
 import { registry } from './registry';
 
@@ -35,6 +35,8 @@ export interface CachedResponse {
   usage: { promptTokens: number; completionTokens: number; totalTokens: number };
   providerId: string;
   modelId: string;
+  qualityTier?: QualityTier;
+  normalizedAlias?: string;
 }
 
 export function getExactCache(cacheKey: string): CachedResponse | null {
@@ -49,7 +51,12 @@ export function getExactCache(cacheKey: string): CachedResponse | null {
 
   try {
     db.prepare('UPDATE exact_cache SET hit_count = hit_count + 1 WHERE cache_key = ?').run(cacheKey);
-    const response = JSON.parse(row.response) as { content: string; finishReason: string | null };
+    const response = JSON.parse(row.response) as {
+      content: string;
+      finishReason: string | null;
+      qualityTier?: QualityTier;
+      normalizedAlias?: string;
+    };
     const usage = JSON.parse(row.usage) as { promptTokens: number; completionTokens: number; totalTokens: number };
     return { ...response, usage, providerId: row.provider_id, modelId: row.model_id };
   } catch {
@@ -76,7 +83,12 @@ export function setExactCache(
     cacheKey,
     response.providerId,
     response.modelId,
-    JSON.stringify({ content: response.content, finishReason: response.finishReason }),
+    JSON.stringify({
+      content: response.content,
+      finishReason: response.finishReason,
+      qualityTier: response.qualityTier,
+      normalizedAlias: response.normalizedAlias,
+    }),
     JSON.stringify(response.usage),
     now,
     now + ttlMs,
@@ -157,7 +169,12 @@ export async function getSemanticCache(prompt: string): Promise<CachedResponse |
 
   db.prepare('UPDATE semantic_cache SET hit_count = hit_count + 1 WHERE id = ?').run(bestMatch.id);
   try {
-    const response = JSON.parse(bestMatch.row.response) as { content: string; finishReason: string | null };
+    const response = JSON.parse(bestMatch.row.response) as {
+      content: string;
+      finishReason: string | null;
+      qualityTier?: QualityTier;
+      normalizedAlias?: string;
+    };
     const usage = JSON.parse(bestMatch.row.usage) as { promptTokens: number; completionTokens: number; totalTokens: number };
     return { ...response, usage, providerId: bestMatch.row.provider_id, modelId: bestMatch.row.model_id };
   } catch {
@@ -185,7 +202,12 @@ export async function setSemanticCache(
     id,
     promptHash,
     JSON.stringify(embedding),
-    JSON.stringify({ content: response.content, finishReason: response.finishReason }),
+    JSON.stringify({
+      content: response.content,
+      finishReason: response.finishReason,
+      qualityTier: response.qualityTier,
+      normalizedAlias: response.normalizedAlias,
+    }),
     response.providerId,
     response.modelId,
     JSON.stringify(response.usage),

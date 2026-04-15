@@ -37,6 +37,24 @@ Good default aliases:
 
 ---
 
+## What The Dashboard Numbers Mean
+
+When you open the hub dashboard, read the quota badge before trusting the number:
+
+- `provider synced` means the provider reported real remaining quota.
+- `hub only` means the hub is showing its own tracked headroom against the configured limit.
+- `ceiling only` means the hub can show the published cap, but not true live remaining yet.
+
+Plain English version:
+
+- some rows are real remaining quota
+- some rows are safe local headroom estimates
+- some rows are just the published ceiling because the provider does not give the hub enough live usage detail
+
+That is intentional. It is better for the dashboard to say "ceiling only" than to pretend it knows exact remaining when it does not.
+
+---
+
 ## Same Machine Vs Another Machine
 
 ### Same machine
@@ -49,7 +67,7 @@ http://127.0.0.1:3099/v1
 
 That is the normal setup for your Windows 11 Pro GMKtec box.
 
-### Different machine, WSL, Docker, or another Linux host
+### Different machine, Docker, or another Linux host
 
 If the app is somewhere else, `127.0.0.1` points to the app machine, not the hub machine.
 
@@ -59,6 +77,7 @@ In that case:
 - keep the same `/v1` path
 - keep using a hub client token
 - only change `HUB_HOST` from `127.0.0.1` when you intentionally want remote access
+- only think about WSL here if you intentionally chose to run the client there
 
 Example:
 
@@ -108,8 +127,31 @@ Recommended stack:
 - AI Access Hub on Windows host
 - OpenClaw on Windows host
 - Qdrant on Docker Desktop or another local machine
-- SearXNG on Docker Desktop, WSL, or another Linux box
+- SearXNG on Docker Desktop or another Linux box
 - optional local runtime like LM Studio or Ollama behind the hub
+
+Setup package status:
+
+- first implementation is now `setup-openclaw.bat`
+- it reuses an existing OpenClaw install instead of reinstalling it
+- it now generates `%USERPROFILE%\.openclaw-aihub\start.bat` and `stop.bat` for the OpenClaw profile
+- it prefers Docker Qdrant on Windows
+- it can also adopt an existing Qdrant instance with `-QdrantMode adopt`
+- SearXNG is optional and detection-only in this first pass
+
+Telegram quick setup:
+
+1. Create a bot with `@BotFather` and copy the token.
+2. Get your Telegram numeric user ID from `@userinfobot` or `@RawDataBot`.
+3. Run `openclaw.cmd --profile aihub channels add --channel telegram --token "YOUR_BOT_TOKEN"`.
+4. In `C:\Users\Ian\.openclaw-aihub\openclaw.json`, set `channels.telegram.allowFrom` to your Telegram user ID.
+5. Restart with `%USERPROFILE%\.openclaw-aihub\stop.bat` then `%USERPROFILE%\.openclaw-aihub\start.bat`.
+
+Example:
+
+```bat
+setup-openclaw.bat -OpenClawBaseUrl http://127.0.0.1:3001 -StartQdrant -StartHub
+```
 
 Hook it to the hub with:
 
@@ -138,9 +180,11 @@ Use this when you want:
 Recommended stack:
 
 - AI Access Hub on Windows host
-- Agent Zero on Windows host or WSL
+- Agent Zero on Windows host
 - Qdrant locally
 - optional browser/search tooling alongside it
+
+If a specific Agent Zero dependency later proves to require something heavier, treat that as an exception rather than the default Windows path.
 
 Hook it to the hub with:
 

@@ -7,6 +7,7 @@ import { registry } from './registry';
 import { getCacheStats } from './cache';
 import { getActiveDbWarnings } from './warnings';
 import type { HubModes, ProviderState, ProviderStatus } from './types';
+import { getEffectiveModes } from './modes';
 
 export type DoctorCheckLevel = 'ok' | 'warn' | 'error';
 export type DoctorOverallStatus = 'ok' | 'warn' | 'error';
@@ -165,6 +166,7 @@ function renderCheck(check: DoctorCheck): string {
 
 export async function buildDoctorReport(): Promise<DoctorReport> {
   const cfg = getConfig();
+  const modes = getEffectiveModes(cfg);
   getDb();
   await registry.initialize();
 
@@ -214,6 +216,7 @@ export async function buildDoctorReport(): Promise<DoctorReport> {
   const missingAuth = statuses.filter(status => status.enabled && !status.authenticated).map(status => status.id);
   const blocked = statuses.filter(status => status.enabled && !status.routable).map(status => status.id);
   const degraded = statuses.filter(status => ['degraded', 'recovering'].includes(status.status)).map(status => status.id);
+  const cohereChatDisabled = cfg.providers.cohere?.enabled && cfg.providers.cohere?.chatEnabled !== true;
 
   const checks: DoctorCheck[] = [
     {
@@ -260,6 +263,18 @@ export async function buildDoctorReport(): Promise<DoctorReport> {
           level: 'ok',
           message: 'All enabled providers have credentials or interactive auth in place.',
         },
+    cohereChatDisabled
+      ? {
+          id: 'cohere-chat-disabled',
+          level: 'warn',
+          message: 'Cohere chat routing is intentionally disabled.',
+          details: 'COHERE_CHAT_ENABLED=false keeps Cohere out of strong-free and fast-free until the compatibility chat endpoint is verified healthy.',
+        }
+      : {
+          id: 'cohere-chat-disabled',
+          level: 'ok',
+          message: 'Cohere chat routing is enabled.',
+        },
     summary.criticalWarnings > 0
       ? {
           id: 'warnings',
@@ -294,12 +309,8 @@ export async function buildDoctorReport(): Promise<DoctorReport> {
     {
       id: 'modes',
       level: 'ok',
-      message: 'Mode flags loaded from config.',
-      details: formatModes({
-        freeOnly: cfg.freeOnly,
-        localOnly: cfg.localOnly,
-        premiumEnabled: cfg.premiumEnabled,
-      }),
+      message: 'Mode flags loaded from config and persisted overrides.',
+      details: formatModes(modes),
     },
   ];
 
@@ -312,11 +323,7 @@ export async function buildDoctorReport(): Promise<DoctorReport> {
       port: cfg.port,
       dataDir: cfg.dataDir,
       logDir: cfg.logDir,
-      modes: {
-        freeOnly: cfg.freeOnly,
-        localOnly: cfg.localOnly,
-        premiumEnabled: cfg.premiumEnabled,
-      },
+      modes,
     },
     database: {
       path: databasePath,

@@ -37,7 +37,7 @@ const CAPS: ProviderCapabilities = {
   structuredOutput: false, embeddings: true, rerank: true, longContext: true,
 };
 
-const DEFAULT_MODELS: ModelInfo[] = [
+const CHAT_MODELS: ModelInfo[] = [
   {
     id: 'command-r-plus',
     providerId: 'cohere', name: 'Command R+',
@@ -50,6 +50,9 @@ const DEFAULT_MODELS: ModelInfo[] = [
     qualityTier: 'tier_free_fast', contextWindow: 128_000, maxOutputTokens: 4_096,
     capabilities: CAPS, aliases: ['fast-free'], isFree: true,
   },
+];
+
+const UTILITY_MODELS: ModelInfo[] = [
   {
     id: 'embed-english-v3.0',
     providerId: 'cohere', name: 'Embed English v3',
@@ -71,12 +74,21 @@ export class CohereAdapter extends BaseAdapter {
   readonly capabilities = CAPS;
   readonly qualityTier = 'tier_free_strong' as const;
   readonly defaultLimitConfig: ProviderLimitConfig = {
-    rpm: 20, rpd: 1000, tpm: 100_000, tpd: null,
-    monthlyRequests: null, monthlyTokens: null, confidence: 'inferred',
+    rpm: null,
+    rpd: null,
+    tpm: null,
+    tpd: null,
+    monthlyRequests: 1_000,
+    monthlyTokens: null,
+    confidence: 'official',
+    poolScope: 'provider',
+    poolKey: 'trial-key',
+    sourceLabel: 'Cohere trial or evaluation monthly call cap',
   };
 
   private apiKey = '';
-  private models: ModelInfo[] = DEFAULT_MODELS;
+  private models: ModelInfo[] = UTILITY_MODELS;
+  private chatEnabled = false;
 
   override async initialize(): Promise<void> {
     const cfg = getConfig();
@@ -84,6 +96,8 @@ export class CohereAdapter extends BaseAdapter {
     this._enabled = pCfg.enabled;
     this.apiKey = pCfg.apiKey ?? '';
     this._authenticated = !!this.apiKey;
+    this.chatEnabled = pCfg.chatEnabled === true;
+    this.models = this.chatEnabled ? [...CHAT_MODELS, ...UTILITY_MODELS] : [...UTILITY_MODELS];
   }
 
   private headers(): Record<string, string> {
@@ -97,12 +111,46 @@ export class CohereAdapter extends BaseAdapter {
     if (!this.apiKey) return { healthy: false, latencyMs: 0, error: 'No API key' };
     const start = Date.now();
     try {
-      const resp = await doFetch(`${BASE_URL}/v2/models?page_size=1`, {
+      if (!this.chatEnabled) {
+        const resp = await doFetch(`${BASE_URL}/v2/embed`, {
+          method: 'POST',
+          headers: this.headers(),
+          body: JSON.stringify({
+            model: 'embed-english-v3.0',
+            texts: ['health check'],
+            input_type: 'search_document',
+            embedding_types: ['float'],
+          }),
+          timeoutMs: 10_000,
+        });
+        const latencyMs = Date.now() - start;
+        const text = resp.ok ? '' : await resp.text().catch(() => '');
+        return {
+          healthy: resp.ok,
+          latencyMs,
+          error: resp.ok ? undefined : `HTTP ${resp.status}${text ? ` – ${text.slice(0, 200)}` : ''}`,
+          failureType: resp.ok ? undefined : classifyHttpError(resp.status, text),
+        };
+      }
+
+      const resp = await doFetch(`${BASE_URL}/compatibility/openai/v1/chat/completions`, {
+        method: 'POST',
         headers: this.headers(),
+        body: JSON.stringify({
+          model: 'command-r',
+          messages: [{ role: 'user', content: 'health check' }],
+          max_tokens: 1,
+        }),
         timeoutMs: 10_000,
       });
       const latencyMs = Date.now() - start;
-      return { healthy: resp.ok, latencyMs, error: resp.ok ? undefined : `HTTP ${resp.status}` };
+      const text = resp.ok ? '' : await resp.text().catch(() => '');
+      return {
+        healthy: resp.ok,
+        latencyMs,
+        error: resp.ok ? undefined : `HTTP ${resp.status}${text ? ` – ${text.slice(0, 200)}` : ''}`,
+        failureType: resp.ok ? undefined : classifyHttpError(resp.status, text),
+      };
     } catch (e) {
       return { healthy: false, latencyMs: Date.now() - start, error: String(e) };
     }
@@ -113,6 +161,10 @@ export class CohereAdapter extends BaseAdapter {
   }
 
   override async executeCompletion(req: AdapterRequest): Promise<AdapterResponse> {
+    if (!this.chatEnabled) {
+      throw new ProviderError('cohere chat routing is disabled; enable COHERE_CHAT_ENABLED=true only after verifying the compat endpoint', 'unknown');
+    }
+
     // Use OpenAI-compat endpoint for simpler mapping
     const url = `${BASE_URL}/compatibility/openai/v1/chat/completions`;
 
@@ -217,12 +269,20 @@ export class CohereAdapter extends BaseAdapter {
       meta?: { billed_units?: { search_units?: number } };
     };
 
+    const promptTokens = estimateTokens([req.query, ...req.documents].join(' '));
+
     return {
       results: (data.results ?? []).map(r => ({
         index: r.index,
         relevanceScore: r.relevance_score,
         document: r.document?.text,
       })),
+      usage: {
+        promptTokens,
+        completionTokens: 0,
+        totalTokens: promptTokens,
+        providerUnits: data.meta?.billed_units?.search_units,
+      },
     };
   }
 

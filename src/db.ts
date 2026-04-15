@@ -85,6 +85,21 @@ function applySchema(db: Database.Database): void {
       quarantine_until     INTEGER
     );
 
+    CREATE TABLE IF NOT EXISTS model_health (
+      provider_id          TEXT NOT NULL,
+      model_id             TEXT NOT NULL,
+      healthy              INTEGER NOT NULL DEFAULT 1,
+      last_check_at        INTEGER NOT NULL DEFAULT 0,
+      latency_ms           INTEGER NOT NULL DEFAULT 0,
+      last_error           TEXT,
+      last_failure_type    TEXT,
+      consecutive_failures INTEGER NOT NULL DEFAULT 0,
+      circuit_open         INTEGER NOT NULL DEFAULT 0,
+      cooldown_until       INTEGER,
+      quarantine_until     INTEGER,
+      PRIMARY KEY (provider_id, model_id)
+    );
+
     -- Exact request cache
     CREATE TABLE IF NOT EXISTS exact_cache (
       cache_key  TEXT PRIMARY KEY,
@@ -154,6 +169,7 @@ function applySchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_provider_quota_snapshots_lookup ON provider_quota_snapshots(provider_id, metric_kind, window_scope, observed_at);
     CREATE INDEX IF NOT EXISTS idx_request_logs_ts ON request_logs(timestamp);
     CREATE INDEX IF NOT EXISTS idx_request_logs_provider ON request_logs(selected_provider);
+    CREATE INDEX IF NOT EXISTS idx_model_health_provider ON model_health(provider_id);
     CREATE INDEX IF NOT EXISTS idx_exact_cache_expires ON exact_cache(expires_at);
     CREATE INDEX IF NOT EXISTS idx_semantic_cache_expires ON semantic_cache(expires_at);
     CREATE INDEX IF NOT EXISTS idx_warnings_provider ON warnings(provider_id, created_at);

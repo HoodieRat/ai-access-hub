@@ -13,21 +13,18 @@ const DEFAULT_MODELS: ModelInfo[] = [
     providerId: 'sambanova', name: 'DeepSeek V3.2 (SambaNova)',
     qualityTier: 'tier_free_strong', contextWindow: 131_072, maxOutputTokens: 8_192,
     capabilities: CAPS, aliases: ['strong-free'], isFree: true,
-    limitConfig: { rpm: 10, rpd: null, tpm: null, tpd: null, confidence: 'inferred' },
   },
   {
     id: 'DeepSeek-R1-0528',
     providerId: 'sambanova', name: 'DeepSeek R1 0528 (SambaNova)',
     qualityTier: 'tier_free_strong', contextWindow: 131_072, maxOutputTokens: 8_192,
     capabilities: CAPS, aliases: ['strong-free', 'reasoning-free'], isFree: true,
-    limitConfig: { rpm: 10, rpd: null, tpm: null, tpd: null, confidence: 'inferred' },
   },
   {
     id: 'Meta-Llama-3.1-8B-Instruct',
     providerId: 'sambanova', name: 'LLaMA 3.1 8B (SambaNova)',
     qualityTier: 'tier_free_fast', contextWindow: 16_384, maxOutputTokens: 8_192,
     capabilities: CAPS, aliases: ['fast-free'], isFree: true,
-    limitConfig: { rpm: 30, rpd: null, tpm: null, tpd: null, confidence: 'inferred' },
   },
 ];
 
@@ -42,7 +39,7 @@ export class SambaNovaAdapter extends OpenAICompatAdapter {
       apiKey: pCfg.apiKey ?? '',
       capabilities: CAPS,
       qualityTier: 'tier_free_strong',
-      defaultLimitConfig: { rpm: 10, rpd: null, tpm: null, tpd: null, monthlyRequests: null, monthlyTokens: null, confidence: 'inferred' },
+      defaultLimitConfig: { rpm: null, rpd: null, tpm: null, tpd: null, monthlyRequests: null, monthlyTokens: null, confidence: 'observed' },
       defaultModels: DEFAULT_MODELS,
       supportsModelList: true,
     });

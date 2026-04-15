@@ -23,6 +23,7 @@ import {
   doFetch,
   estimateMessagesTokens,
   estimateTokens,
+  normalizeMessagesToText,
 } from './base';
 import { getConfig } from '../config';
 
@@ -65,8 +66,21 @@ export class CloudflareAdapter extends BaseAdapter {
   readonly capabilities = CAPS;
   readonly qualityTier = 'tier_free_fast' as const;
   readonly defaultLimitConfig: ProviderLimitConfig = {
-    rpm: 300, rpd: null, tpm: null, tpd: null,
-    monthlyRequests: null, monthlyTokens: null, confidence: 'inferred',
+    rpm: null,
+    rpd: null,
+    tpm: null,
+    tpd: null,
+    monthlyRequests: null,
+    monthlyTokens: null,
+    providerUnitsPerMinute: null,
+    providerUnitsPerDay: 10_000,
+    monthlyProviderUnits: 300_000,
+    providerUnitLabel: 'neurons',
+    confidence: 'official',
+    usageCoverage: 'unknown',
+    poolScope: 'provider',
+    poolKey: 'workers-ai-free',
+    sourceLabel: 'Cloudflare Workers AI free daily neuron allocation',
   };
 
   private apiToken = '';
@@ -127,8 +141,12 @@ export class CloudflareAdapter extends BaseAdapter {
   override async executeCompletion(req: AdapterRequest): Promise<AdapterResponse> {
     const modelId = req.model;
     const url = this.getBaseUrl(modelId);
+    const normalizedMessages = normalizeMessagesToText(req.messages).map(message => ({
+      role: message.role,
+      content: message.content ?? '',
+    }));
 
-    const body: Record<string, unknown> = { messages: req.messages };
+    const body: Record<string, unknown> = { messages: normalizedMessages };
     if (req.stream) body.stream = true;
     if (req.maxTokens) body.max_tokens = req.maxTokens;
     if (req.temperature !== undefined) body.temperature = req.temperature;

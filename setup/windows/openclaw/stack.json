@@ -1,0 +1,75 @@
+{
+  "$schema": "../shared/stack-schema.json",
+  "id": "openclaw",
+  "displayName": "OpenClaw + AI Access Hub",
+  "components": [
+    {
+      "id": "hub",
+      "displayName": "AI Access Hub",
+      "required": true,
+      "pathCandidates": [
+        "{PROJECT_ROOT}\\dist\\index.js"
+      ],
+      "ports": [
+        "{HUB_PORT}"
+      ],
+      "healthUrls": [
+        "http://127.0.0.1:{HUB_PORT}/health"
+      ]
+    },
+    {
+      "id": "openclaw",
+      "displayName": "OpenClaw",
+      "required": true,
+      "pathCandidates": [
+        "{OPENCLAW_PATH}"
+      ],
+      "commandCandidates": [
+        "openclaw",
+        "openclaw.cmd",
+        "OpenClaw"
+      ],
+      "processPatterns": [
+        "{OPENCLAW_PROCESS_PATTERN}"
+      ],
+      "ports": [
+        "{OPENCLAW_PORT}"
+      ],
+      "healthUrls": [
+        "{OPENCLAW_BASE_URL}/health"
+      ]
+    },
+    {
+      "id": "qdrant",
+      "displayName": "Qdrant",
+      "required": true,
+      "ports": [
+        "{QDRANT_PORT}"
+      ],
+      "healthUrls": [
+        "{QDRANT_BASE_URL}/healthz",
+        "{QDRANT_BASE_URL}/collections"
+      ],
+      "dockerContainers": [
+        "ai-access-hub-qdrant",
+        "qdrant"
+      ]
+    },
+    {
+      "id": "searxng",
+      "displayName": "SearXNG",
+      "required": false,
+      "ports": [
+        "{SEARXNG_PORT}"
+      ],
+      "healthUrls": [
+        "{SEARXNG_BASE_URL}/healthz",
+        "{SEARXNG_BASE_URL}/"
+      ],
+      "dockerContainers": [
+        "ai-access-hub-searxng",
+        "searxng"
+      ]
+    }
+  ]
+}

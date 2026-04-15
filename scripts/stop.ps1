@@ -31,6 +31,36 @@ function Resolve-ProjectPath {
     return [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot $PathValue))
 }
 
+function Read-RecordedProcessId {
+    param([string]$FilePath)
+
+    if (-not (Test-Path $FilePath)) {
+        return $null
+    }
+
+    $rawValue = Get-Content $FilePath -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $rawValue) {
+        return $null
+    }
+
+    $parsedValue = 0
+    if ([int]::TryParse($rawValue, [ref]$parsedValue)) {
+        return $parsedValue
+    }
+
+    return $null
+}
+
+function Get-LiveProcess {
+    param([int]$ProcessId)
+
+    if (-not $ProcessId) {
+        return $null
+    }
+
+    return Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+}
+
 function Test-Port {
     param([int]$Port)
 
@@ -45,6 +75,12 @@ function Test-Port {
     }
 }
 
+function Remove-StaleFile {
+    param([string]$FilePath)
+
+    Remove-Item $FilePath -Force -ErrorAction SilentlyContinue
+}
+
 try {
     $projectRoot = Split-Path $PSScriptRoot -Parent
     $envPath = Join-Path $projectRoot '.env'
@@ -57,20 +93,33 @@ try {
     $adminToken = Get-EnvValue -Key 'HUB_ADMIN_TOKEN' -FilePath $envPath
     $logDir = Resolve-ProjectPath -ProjectRoot $projectRoot -PathValue (Get-EnvValue -Key 'HUB_LOG_DIR' -FilePath $envPath -Default '.\logs')
     $pidFile = Join-Path $logDir 'hub.pid'
-    $processId = $null
+    $supervisorPidFile = Join-Path $logDir 'hub-supervisor.pid'
+    $stopFile = Join-Path $logDir 'hub-supervisor.stop'
+    $processId = Read-RecordedProcessId -FilePath $pidFile
+    $supervisorProcessId = Read-RecordedProcessId -FilePath $supervisorPidFile
 
-    if (Test-Path $pidFile) {
-        $rawPid = Get-Content $pidFile | Select-Object -First 1
-        if ($rawPid) {
-            $processId = [int]$rawPid
-        }
+    if (-not (Get-LiveProcess -ProcessId $processId)) {
+        Remove-StaleFile -FilePath $pidFile
+        $processId = $null
     }
 
-    if (-not $processId -and -not (Test-Port -Port $port)) {
-        Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+    if (-not (Get-LiveProcess -ProcessId $supervisorProcessId)) {
+        Remove-StaleFile -FilePath $supervisorPidFile
+        $supervisorProcessId = $null
+    }
+
+    if (-not $processId -and -not $supervisorProcessId -and -not (Test-Port -Port $port)) {
+        Remove-StaleFile -FilePath $pidFile
+        Remove-StaleFile -FilePath $supervisorPidFile
         Write-Host 'AI Access Hub is not running.'
         exit 0
     }
+
+    if (-not (Test-Path $logDir)) {
+        New-Item -ItemType Directory -Path $logDir | Out-Null
+    }
+
+    Set-Content -Path $stopFile -Value 'stop requested by stop.ps1' -Encoding ASCII
 
     if ($adminToken) {
         try {
@@ -80,14 +129,14 @@ try {
         }
     }
 
-    for ($attempt = 0; $attempt -lt 10; $attempt++) {
-        $alive = $false
-        if ($processId) {
-            $alive = [bool](Get-Process -Id $processId -ErrorAction SilentlyContinue)
-        }
+    for ($attempt = 0; $attempt -lt 12; $attempt++) {
+        $childAlive = [bool](Get-LiveProcess -ProcessId $processId)
+        $supervisorAlive = [bool](Get-LiveProcess -ProcessId $supervisorProcessId)
 
-        if (-not $alive -and -not (Test-Port -Port $port)) {
-            Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+        if (-not $childAlive -and -not $supervisorAlive -and -not (Test-Port -Port $port)) {
+            Remove-StaleFile -FilePath $pidFile
+            Remove-StaleFile -FilePath $supervisorPidFile
+            Remove-StaleFile -FilePath $stopFile
             Write-Host 'AI Access Hub stopped.'
             exit 0
         }
@@ -100,7 +149,20 @@ try {
         Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
     }
 
-    Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+    if ($supervisorProcessId) {
+        Write-Host "Stopping supervisor PID $supervisorProcessId..."
+        Stop-Process -Id $supervisorProcessId -Force -ErrorAction SilentlyContinue
+    }
+
+    Remove-StaleFile -FilePath $pidFile
+    Remove-StaleFile -FilePath $supervisorPidFile
+    Remove-StaleFile -FilePath $stopFile
+
+    if (Test-Port -Port $port) {
+        Write-Host "Warning: port $port is still in use after shutdown."
+        exit 1
+    }
+
     Write-Host 'AI Access Hub stopped.'
     exit 0
 } catch {

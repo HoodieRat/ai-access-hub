@@ -105,6 +105,80 @@ test.describe('dashboard public navigation', () => {
     }
   });
 
+  test('route preview renders candidate and skip diagnostics', async ({ page }) => {
+    let requestBody: Record<string, unknown> | null = null;
+
+    await page.route('**/v1/admin/force-route', async route => {
+      requestBody = JSON.parse(route.request().postData() ?? '{}') as Record<string, unknown>;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          classified_as: 'code_generation',
+          preview: {
+            classifiedAs: 'code_generation',
+            alias: 'strong-code',
+            stabilityLevel: 'strict',
+            effectiveModes: {
+              freeOnly: false,
+              localOnly: false,
+              premiumEnabled: true,
+            },
+            priorityOrder: ['copilot', 'github-models', 'mistral'],
+            candidates: [{
+              providerId: 'github-models',
+              modelId: 'gpt-4o',
+              score: 0.731,
+              qualityTier: 'tier_code_strong',
+              isFree: true,
+              aliases: ['strong-code', 'strong-free'],
+              aliasMatch: 'broadened',
+              aliasMatchReason: 'requested=strong-code; matched=strong-free',
+            }],
+            skipCounts: {
+              alias_mismatch: 2,
+              premium_disabled: 1,
+            },
+            skipped: [
+              {
+                providerId: 'openrouter',
+                modelId: 'openai/gpt-4o-mini',
+                reason: 'alias_mismatch',
+                detail: 'requested=strong-code',
+              },
+              {
+                providerId: 'copilot',
+                reason: 'premium_disabled',
+              },
+            ],
+          },
+        }),
+      });
+    });
+
+    await openDashboard(page);
+    await expect(page.locator('body')).not.toContainText('Ã');
+    await openPage(page, 'controls');
+    await waitForContent(page, 'controls-content');
+    await page.locator('#classify-input').fill('Write a TypeScript router fix.');
+    await page.locator('#preview-route-alias').selectOption('strong-code');
+    await page.locator('#preview-stability-level').selectOption('strict');
+    await page.locator('#preview-preferred-provider').fill('github-models');
+    await page.getByRole('button', { name: 'Preview Route' }).click();
+
+    await expect(page.locator('#route-preview-result')).toContainText('Candidate Order');
+    await expect(page.locator('#route-preview-result')).toContainText('github-models');
+    await expect(page.locator('#route-preview-result')).toContainText('strict');
+    await expect(page.locator('#route-preview-result')).toContainText('broadened');
+    await expect(page.locator('#route-preview-result')).toContainText(/alias[ _]mismatch/i);
+    expect(requestBody).toMatchObject({
+      model_alias: 'strong-code',
+      stability_level: 'strict',
+      preferred_provider: 'github-models',
+      messages: [{ role: 'user', content: 'Write a TypeScript router fix.' }],
+    });
+  });
+
   test('copilot auth init sends a non-empty json body', async ({ page }) => {
     let requestHeaders: Record<string, string> | null = null;
     let requestBody: string | null | undefined;

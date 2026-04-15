@@ -24,12 +24,21 @@ export type RequestClass =
   | 'normal_chat'
   | 'code_generation'
   | 'code_repair'
+  | 'repo_scaffold'
   | 'reasoning_heavy'
   | 'long_context'
   | 'embeddings'
   | 'rerank'
   | 'vision_text'
   | 'structured_extraction';
+
+export type RouteTaskProfile =
+  | 'tiny_reply'
+  | 'general_chat'
+  | 'planning'
+  | 'codegen'
+  | 'repo_scaffold'
+  | 'long_context';
 
 // ─── Provider metadata ────────────────────────────────────────────────────────
 export type ProviderAuthType = 'api_key' | 'oauth' | 'interactive' | 'none';
@@ -146,11 +155,16 @@ export interface RouteRequest {
   preferred_provider?: string;
   forbid_paid?: boolean;
   prefer_local?: boolean;
+  prefer_external?: boolean;
+  exclude_local_on_alias?: string[];
+  explicit_provider_order?: string[];
   max_provider_hops?: number;
   cache_policy?: 'default' | 'bypass' | 'force';
   stability_level?: 'normal' | 'strict';
+  task_profile?: RouteTaskProfile;
   request_tags?: string[];
   project_id?: string;
+  prefer_tool_stability?: boolean;
   require_same_or_better_quality?: boolean;
   allow_downgrade_with_approval?: boolean;
   interactive_warning_mode?: boolean;
@@ -231,6 +245,9 @@ export interface RouteDecision {
   selectedProvider: string;
   selectedModel: string;
   classifiedAs: RequestClass;
+  requestedAlias?: string | null;
+  taskProfile?: RouteTaskProfile | null;
+  stabilityLevel?: 'normal' | 'strict';
   hopCount: number;
   fallbackReason?: string;
   candidatesConsidered: number;
@@ -257,6 +274,20 @@ export interface RouteResult {
 // ─── Health state ─────────────────────────────────────────────────────────────
 export interface ProviderHealth {
   providerId: string;
+  healthy: boolean;
+  lastCheckAt: number;
+  latencyMs: number;
+  lastError: string | null;
+  lastFailureType: FailureType | null;
+  consecutiveFailures: number;
+  circuitOpen: boolean;
+  cooldownUntil: number | null;
+  quarantineUntil: number | null;
+}
+
+export interface ModelHealth {
+  providerId: string;
+  modelId: string;
   healthy: boolean;
   lastCheckAt: number;
   latencyMs: number;

@@ -31,6 +31,36 @@ function Resolve-ProjectPath {
     return [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot $PathValue))
 }
 
+function Read-RecordedProcessId {
+    param([string]$FilePath)
+
+    if (-not (Test-Path $FilePath)) {
+        return $null
+    }
+
+    $rawValue = Get-Content $FilePath -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $rawValue) {
+        return $null
+    }
+
+    $parsedValue = 0
+    if ([int]::TryParse($rawValue, [ref]$parsedValue)) {
+        return $parsedValue
+    }
+
+    return $null
+}
+
+function Get-LiveProcess {
+    param([int]$ProcessId)
+
+    if (-not $ProcessId) {
+        return $null
+    }
+
+    return Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+}
+
 function Test-Port {
     param([int]$Port)
 
@@ -73,11 +103,18 @@ function Open-Dashboard {
     }
 }
 
+function Remove-StaleFile {
+    param([string]$FilePath)
+
+    Remove-Item $FilePath -Force -ErrorAction SilentlyContinue
+}
+
 try {
     $projectRoot = Split-Path $PSScriptRoot -Parent
     $envPath = Join-Path $projectRoot '.env'
     $examplePath = Join-Path $projectRoot '.env.example'
     $distPath = Join-Path $projectRoot 'dist\index.js'
+    $supervisorScriptPath = Join-Path $PSScriptRoot 'hub-supervisor.ps1'
 
     if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
         throw 'node.exe not found. Install Node.js 18+ first.'
@@ -90,6 +127,10 @@ try {
 
     if (-not (Test-Path $distPath)) {
         throw 'dist\index.js not found. Run install.bat first.'
+    }
+
+    if (-not (Test-Path $supervisorScriptPath)) {
+        throw 'scripts\hub-supervisor.ps1 not found. Restore the Windows launcher files and try again.'
     }
 
     if (-not (Test-Path $envPath)) {
@@ -105,16 +146,33 @@ try {
     $port = [int](Get-EnvValue -Key 'HUB_PORT' -FilePath $envPath -Default '3000')
     $logDir = Resolve-ProjectPath -ProjectRoot $projectRoot -PathValue (Get-EnvValue -Key 'HUB_LOG_DIR' -FilePath $envPath -Default '.\logs')
     $pidFile = Join-Path $logDir 'hub.pid'
+    $supervisorPidFile = Join-Path $logDir 'hub-supervisor.pid'
+    $stopFile = Join-Path $logDir 'hub-supervisor.stop'
 
     if (-not (Test-Path $logDir)) {
         New-Item -ItemType Directory -Path $logDir | Out-Null
     }
 
-    if (Test-Path $pidFile) {
-        $existingPid = [int](Get-Content $pidFile | Select-Object -First 1)
-        $existingProcess = Get-Process -Id $existingPid -ErrorAction SilentlyContinue
-        if ($existingProcess) {
+    $existingPid = Read-RecordedProcessId -FilePath $pidFile
+    $existingProcess = Get-LiveProcess -ProcessId $existingPid
+    if (-not $existingProcess) {
+        Remove-StaleFile -FilePath $pidFile
+    }
+
+    $existingSupervisorPid = Read-RecordedProcessId -FilePath $supervisorPidFile
+    $existingSupervisorProcess = Get-LiveProcess -ProcessId $existingSupervisorPid
+    if (-not $existingSupervisorProcess) {
+        Remove-StaleFile -FilePath $supervisorPidFile
+    }
+
+    if ($existingSupervisorProcess -or ($existingProcess -and (Test-Port -Port $port))) {
+        if ($existingSupervisorProcess) {
+            Write-Host "AI Access Hub is already running under supervision (PID: $existingSupervisorPid)"
+        } else {
             Write-Host "AI Access Hub is already running (PID: $existingPid)"
+        }
+
+        if (Test-HealthEndpoint -Port $port -ProjectRoot $projectRoot) {
             Write-Host "Dashboard: http://127.0.0.1:$port/dashboard"
             if (Should-AutoOpenDashboard -EnvPath $envPath) {
                 Open-Dashboard -Port $port
@@ -122,35 +180,51 @@ try {
             exit 0
         }
 
-        Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+        Write-Host 'AI Access Hub is starting or unhealthy. Check the hub supervisor window for logs.'
+        exit 1
     }
 
     if (Test-Port -Port $port) {
         throw "Port $port is already in use. Stop the other process first."
     }
 
+    Remove-StaleFile -FilePath $stopFile
+
     Write-Host 'Starting AI Access Hub...'
     Write-Host "Dashboard: http://127.0.0.1:$port/dashboard"
     Write-Host "API:       http://127.0.0.1:$port/v1/"
-    Write-Host 'Logs:      live output stays visible in the server console window'
+    Write-Host 'Logs:      live output stays visible in the hub supervisor window'
     Write-Host 'Stop with: stop.bat'
     Write-Host 'Ready when: GET /health returns status=ok'
 
-    $process = Start-Process -FilePath 'node' -ArgumentList 'dist/index.js' -WorkingDirectory $projectRoot -WindowStyle Normal -PassThru
-    Set-Content -Path $pidFile -Value $process.Id
+    $supervisorProcess = Start-Process -FilePath 'powershell.exe' -ArgumentList @(
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        $supervisorScriptPath,
+        '-ProjectRoot',
+        $projectRoot
+    ) -WorkingDirectory $projectRoot -WindowStyle Normal -PassThru
 
     for ($attempt = 0; $attempt -lt 20; $attempt++) {
-        $alive = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
+        $alive = Get-LiveProcess -ProcessId $supervisorProcess.Id
         if (-not $alive) {
-            Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
-            Write-Host 'AI Access Hub exited during startup.'
-            Write-Host 'Check the server console window for the last startup logs.'
+            Remove-StaleFile -FilePath $pidFile
+            Remove-StaleFile -FilePath $supervisorPidFile
+            Write-Host 'AI Access Hub supervisor exited during startup.'
+            Write-Host 'Check the hub supervisor window for the last startup logs.'
             exit 1
         }
 
         if (Test-HealthEndpoint -Port $port -ProjectRoot $projectRoot) {
-            Write-Host "AI Access Hub started (PID: $($process.Id))"
-            Write-Host 'The server console window will stay open while logs are streaming.'
+            $recordedSupervisorPid = Read-RecordedProcessId -FilePath $supervisorPidFile
+            if ($recordedSupervisorPid) {
+                Write-Host "AI Access Hub started (Supervisor PID: $recordedSupervisorPid)"
+            } else {
+                Write-Host "AI Access Hub started (Supervisor PID: $($supervisorProcess.Id))"
+            }
+            Write-Host 'The hub supervisor window will stay open while logs are streaming.'
             if (Should-AutoOpenDashboard -EnvPath $envPath) {
                 Open-Dashboard -Port $port
             }
@@ -160,10 +234,20 @@ try {
         Start-Sleep -Seconds 1
     }
 
-    Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
-    Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+    Set-Content -Path $stopFile -Value 'stop requested by startup timeout' -Encoding ASCII
+
+    $startupChildPid = Read-RecordedProcessId -FilePath $pidFile
+    $startupChildProcess = Get-LiveProcess -ProcessId $startupChildPid
+    if ($startupChildProcess) {
+        Stop-Process -Id $startupChildProcess.Id -Force -ErrorAction SilentlyContinue
+    }
+
+    Stop-Process -Id $supervisorProcess.Id -Force -ErrorAction SilentlyContinue
+    Remove-StaleFile -FilePath $pidFile
+    Remove-StaleFile -FilePath $supervisorPidFile
+    Remove-StaleFile -FilePath $stopFile
     Write-Host 'AI Access Hub did not become ready in time.'
-    Write-Host 'Check the server console window for the last startup logs.'
+    Write-Host 'Check the hub supervisor window for the last startup logs.'
     exit 1
 } catch {
     Write-Host "Error: $($_.Exception.Message)"

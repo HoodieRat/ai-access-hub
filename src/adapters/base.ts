@@ -100,6 +100,38 @@ export function estimateMessagesTokens(messages: Array<{ role?: string; content?
   return total + 3; // 3 tokens for conversation overhead
 }
 
+export function flattenContentToText(content: string | null | unknown): string | null {
+  if (content === null || typeof content === 'string') {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    const text = content
+      .filter((part): part is { type?: string; text?: string } => !!part && typeof part === 'object')
+      .filter(part => part.type === 'text')
+      .map(part => part.text ?? '')
+      .join('\n\n')
+      .trim();
+
+    return text || null;
+  }
+
+  return JSON.stringify(content);
+}
+
+export function normalizeMessagesToText<T extends {
+  role: string;
+  content?: string | null | unknown;
+  name?: string;
+  tool_calls?: unknown;
+  tool_call_id?: string;
+}>(messages: T[]): Array<Omit<T, 'content'> & { content: string | null }> {
+  return messages.map(message => ({
+    ...message,
+    content: flattenContentToText(message.content ?? null),
+  }));
+}
+
 // ─── Common HTTP helpers ──────────────────────────────────────────────────────
 export interface FetchOptions {
   method?: string;

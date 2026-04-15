@@ -1,8 +1,75 @@
 # AI Access Hub
 
-A local, unified API router for 13 AI providers. Drop-in OpenAI-compatible endpoint that routes requests across free, membership, and local providers — with smart fallback, caching, quota tracking, and a browser dashboard.
+AI Access Hub is a local AI traffic router. You run it on your own machine, connect the AI services you already have access to, and your apps use one local OpenAI-compatible endpoint instead of dealing with every provider separately.
+
+In plain English:
+
+- your app talks to one local URL
+- the hub picks the best enabled provider for the job
+- it prefers free or already-included usage first
+- it falls back when a provider is down, unhealthy, or rate-limited
+- you can watch usage, warnings, and provider health in a browser dashboard
+
+Current scope: 13 providers across free, membership, premium, and local lanes.
 
 See [COMMANDS.md](COMMANDS.md) for the canonical command list, [FOR-DUMMIES.md](FOR-DUMMIES.md) for the plain-language hookup and stack guide, and [todo.md](todo.md) for the live implementation checklist.
+
+---
+
+## What This Project Actually Is
+
+This is not a chatbot product, not a hosted AI website, and not a company that gives you a brand-new AI subscription.
+
+It is local middleware for your own apps, tools, scripts, and agent frameworks.
+
+Your project sends requests to one local endpoint:
+
+```text
+http://127.0.0.1:3099/v1
+```
+
+The hub then decides which configured provider should answer, based on quality, availability, and your routing rules.
+
+## How Much Free AI Does It Give?
+
+Short answer: the hub itself gives you `0` provider credits until you connect providers.
+
+What it really gives you is one place to combine the recurring free or included quotas from multiple services, so your apps can use those lanes through one endpoint instead of ten different integrations.
+
+Selected recurring free or included lanes documented in this repo as of April 2026:
+
+| Provider lane | Rough recurring included usage |
+|---|---|
+| Gemini Flash | 45,000 requests/month |
+| Gemini Pro | 1,500 requests/month |
+| Groq fast lane | 432,000 requests/month |
+| Groq strong lane | 30,000 requests/month |
+| GitHub Models low-tier | 4,500 requests/month |
+| OpenRouter free | 1,500 to 30,000 free-model requests/month |
+| Cerebras free inference | 30,000,000 tokens/month |
+| Mistral Experiment | 1,000,000,000 tokens/month |
+| Cloudflare Workers AI | 300,000 neurons/month |
+| Cohere trial/eval | 1,000 API calls/month |
+
+Important: these are separate buckets, not one giant shared monthly allowance. Some providers meter requests, some meter tokens, some meter neurons, and local models are limited by your hardware instead of a provider quota.
+
+Practical takeaway: once you connect several of the common free providers, the hub can give you access to a large amount of recurring free usage, often ranging from thousands to hundreds of thousands of chat requests per month plus large token-based allowances on providers like Cerebras and Mistral, before you need paid routes.
+
+## How To Read The Dashboard
+
+The dashboard is designed to avoid fake precision.
+
+- `provider synced` means the vendor reported live remaining quota, so the number is true remaining for that pool.
+- `hub only` means the hub is subtracting only traffic that passed through this hub instance from the configured ceiling.
+- `ceiling only` means the hub knows the published vendor limit but does not have live remaining coverage for that unit yet.
+
+Examples:
+
+- GitHub Models, Groq, and SambaNova can become `provider synced` when their APIs expose usable rate-limit headers.
+- Mistral and Cohere can show meaningful monthly headroom because the hub tracks requests or tokens locally against the configured monthly ceiling.
+- Cloudflare Workers AI currently shows the published neuron ceiling, but not live remaining neurons, because the hub does not yet receive provider-reported neuron consumption.
+
+This means the dashboard is a reliable planning and routing surface, but you still need to read the coverage badge before treating any remaining number as full provider-account truth.
 
 ---
 
@@ -16,6 +83,12 @@ start.bat     # launch hub
 stop.bat      # clean shutdown
 ```
 
+Windows stack packages now start with the OpenClaw flow:
+
+```bat
+setup-openclaw.bat   # adopt existing OpenClaw, wire hub, optional Docker Qdrant
+```
+
 ### Linux / macOS
 
 ```sh
@@ -26,6 +99,8 @@ chmod +x install.sh start.sh
 ```
 
 Then open **http://127.0.0.1:3099/dashboard**
+
+If you are building the Windows OpenClaw stack rather than only the hub, see [SETUP.md](SETUP.md) and [FOR-DUMMIES.md](FOR-DUMMIES.md) for the new setup package flow.
 
 Before publishing or handing this off for production use, run:
 
@@ -74,7 +149,7 @@ print(response.choices[0].message.content)
 | **GitHub Models** | free | PAT | GPT-4o, Phi-3.5, llama-405b |
 | **SambaNova** | free | API key | llama-3.1-405b |
 | **Cohere** | free | API key | Strong embeddings + rerank |
-| **Fireworks** | free | API key | llama, mistral, qwen |
+| **Fireworks** | paid / one-time credit | API key | Not counted as recurring free quota in the hub dashboard |
 | **GitHub Copilot** | membership | OAuth | Requires GitHub Copilot Pro+ |
 | **Codex / OpenAI** | premium | API key or local Codex CLI login | OpenAI API key or logged-in ChatGPT Codex CLI |
 
@@ -89,6 +164,7 @@ Use short aliases instead of model IDs — the hub picks the best available:
 | `fast-free` | Fastest free model (Groq / Cerebras) |
 | `strong-free` | Strongest free model (Gemini / llama-405b) |
 | `strong-code` | Best coding model (Copilot / Codestral) |
+| `agent-build` | Planning-first lane for large scaffold and tool-heavy agent work |
 | `strong-long-context` | Longest context (Gemini 1.5 Pro) |
 | `local-fast` | Local runtime fast model |
 | `local-strong` | Local runtime capable model |
@@ -160,6 +236,7 @@ Add these fields to any `/v1/chat/completions` request body:
   "messages": [...],
   "route_policy": "quality",
   "model_alias": "strong-free",
+  "task_profile": "repo_scaffold",
   "forbid_paid": true,
   "prefer_local": false,
   "max_provider_hops": 3,
@@ -167,6 +244,15 @@ Add these fields to any `/v1/chat/completions` request body:
   "allow_downgrade_with_approval": false
 }
 ```
+
+Useful task profiles:
+
+- `tiny_reply` for very short utility answers
+- `general_chat` for normal back-and-forth
+- `planning` for higher-stability reasoning/planning turns
+- `codegen` for focused implementation requests
+- `repo_scaffold` for large project/app/game scaffolding
+- `long_context` when context size should dominate routing
 
 ---
 

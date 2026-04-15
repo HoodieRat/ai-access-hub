@@ -6,6 +6,41 @@ Use `COMMANDS.md` for the canonical start, stop, doctor, and verification comman
 
 ---
 
+## Windows Stack Packages
+
+The first Windows stack package is now in place for the OpenClaw setup.
+
+Use it when you want a reuse-first Windows flow that:
+
+- adopts an existing OpenClaw install instead of reinstalling it
+- merges `.env` safely instead of wiping your hub config
+- prefers Docker for helper services on Windows
+- can start bundled Qdrant when you want the local Docker path
+
+Run it with:
+
+```bat
+setup-openclaw.bat -StartQdrant
+```
+
+Useful variations:
+
+```bat
+setup-openclaw.bat -OpenClawBaseUrl http://127.0.0.1:3001 -StartQdrant -StartHub
+setup-openclaw.bat -OpenClawPath "C:\Tools\OpenClaw"
+setup-openclaw.bat -QdrantMode adopt -QdrantBaseUrl http://127.0.0.1:6333
+```
+
+Current scope of the first implementation:
+
+- OpenClaw is adopt-first only
+- Qdrant is supported in Docker or adopt mode
+- SearXNG is detection-only for now and can be added later with `-SearXngBaseUrl`
+
+See [setup/windows/openclaw/README.md](setup/windows/openclaw/README.md) for the exact parameters and behavior.
+
+---
+
 ## 1. Install
 
 ```sh
@@ -387,9 +422,9 @@ If your app is not on the same machine:
 
 - Use the hub machine's IP or DNS name instead of `127.0.0.1`.
 - Keep `HUB_HOST=127.0.0.1` for same-machine use.
-- Only change `HUB_HOST` to a reachable address when you intentionally want another machine, WSL instance, or container to connect.
+- Only change `HUB_HOST` to a reachable address when you intentionally want another machine or container to connect.
 - On your Windows 11 GMKtec box, `127.0.0.1` is correct when both the hub and the app are running on Windows itself.
-- If the app is inside WSL, Docker, or another Linux box, use the Windows or Linux host IP that can actually reach the hub.
+- If the app is inside Docker or another Linux box, use the Windows or Linux host IP that can actually reach the hub. If you intentionally put the client inside WSL, treat that as a special-case routing choice rather than the default Windows path.
 
 Yes, the Linux setup is compatible. This project already ships with `install.sh`, `start.sh`, and `stop.sh`, and the same OpenAI-compatible `/v1` endpoint works on both Windows and Linux.
 

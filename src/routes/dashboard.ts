@@ -678,7 +678,7 @@ function formatQuotaHeadline(window) {
 }
 
 function formatQuotaReset(resetAt) {
-  if (!resetAt) return 'Ã¢â‚¬â€';
+  if (!resetAt) return 'not availableÂ';
   const remainingMs = Math.max(0, resetAt - Date.now());
   return '<strong>' + fmtDuration(remainingMs) + '</strong> <span class="muted">(' + formatTimestamp(resetAt) + ')</span>';
 }
@@ -755,7 +755,7 @@ function renderFreeUsageServiceCard(service, sectionKey) {
   let body = '<div class="quota-empty">No quota window is configured for this service yet.</div>';
   if (service.primaryWindow) {
     body = '<div class="quota-service-metric">' + formatQuotaHeadline(service.primaryWindow) + '</div>'
-      + '<div class="quota-service-subtitle">Reset: ' + formatQuotaReset(service.primaryWindow.resetAt) + ' Ã‚Â· ' + formatQuotaFreshness(service.primaryWindow) + '</div>'
+      + '<div class="quota-service-subtitle">Reset: ' + formatQuotaReset(service.primaryWindow.resetAt) + ' - ' + formatQuotaFreshness(service.primaryWindow) + '</div>'
       + '<div class="quota-progress"><div class="quota-progress-fill" style="width:' + quotaFillWidth(service.primaryWindow.remainingPct) + ';background:' + tone.color + '"></div></div>'
       + renderQuotaWindowPills(service.windows, service.primaryWindow);
   }
@@ -860,7 +860,7 @@ function renderQuotaMatrixRow(service, sectionKey, window) {
     + '<td><div class="quota-cell-stack"><div>' + fmtNum(window.remaining) + '</div><div class="muted">' + quotaRemainingVerb(window) + '</div></div></td>'
     + '<td><div class="quota-cell-stack"><div>' + formatQuotaReset(window.resetAt) + '</div><div class="muted">' + formatQuotaFreshness(window) + '</div></div></td>'
     + '<td>' + poolLabel + '</td>'
-    + '<td class="muted">' + (notes || 'Ã¢â‚¬â€') + '</td>'
+    + '<td class="muted">' + (notes || 'not availableÂ') + '</td>'
   + '</tr>';
 }
 
@@ -872,10 +872,10 @@ function renderQuotaUnknownRow(service, sectionKey) {
     + '<td><span class="badge ' + quotaEvidenceBadgeClass(service.evidence) + '">' + quotaEvidenceLabel(service.evidence, sectionKey) + '</span></td>'
     + '<td><span class="badge badge-muted">unknown</span></td>'
     + '<td><span class="badge badge-muted">unknown</span></td>'
-    + '<td>Ã¢â‚¬â€</td>'
-    + '<td>Ã¢â‚¬â€</td>'
-    + '<td>Ã¢â‚¬â€</td>'
-    + '<td>Ã¢â‚¬â€</td>'
+    + '<td>not availableÂ</td>'
+    + '<td>not availableÂ</td>'
+    + '<td>not availableÂ</td>'
+    + '<td>not availableÂ</td>'
     + '<td>' + (service.poolScope && service.poolScope !== 'unknown' ? service.poolScope : 'unknown') + '</td>'
     + '<td class="muted">' + (notes || 'No quota window configured yet.') + '</td>'
   + '</tr>';
@@ -1020,7 +1020,7 @@ async function loadOverview() {
             <tr>
               <td>\${renderLevelBadge(check.level)}</td>
               <td>\${check.message}</td>
-              <td class="muted">\${check.details ?? 'Ã¢â‚¬â€'}</td>
+              <td class="muted">\${check.details ?? 'not availableÂ'}</td>
             </tr>
           \`).join('')}
         </table>
@@ -1035,9 +1035,9 @@ async function loadOverview() {
             <td class="mono">\${provider.id}</td>
             <td>\${renderProviderState(provider)}</td>
             <td>\${provider.routable ? '<span class="badge badge-green">yes</span>' : '<span class="badge badge-red">no</span>'}</td>
-            <td>\${provider.lastFailureType ? \`<span class="badge badge-muted">\${humanizeText(provider.lastFailureType)}</span>\` : 'Ã¢â‚¬â€'}</td>
+            <td>\${provider.lastFailureType ? \`<span class="badge badge-muted">\${humanizeText(provider.lastFailureType)}</span>\` : 'not availableÂ'}</td>
             <td>\${formatRecovery(provider)}</td>
-            <td>\${provider.lastLatencyMs > 0 ? provider.lastLatencyMs + 'ms' : 'Ã¢â‚¬â€'}</td>
+            <td>\${provider.lastLatencyMs > 0 ? provider.lastLatencyMs + 'ms' : 'not availableÂ'}</td>
           </tr>
         \`).join('')}
       </table>
@@ -1077,10 +1077,10 @@ async function loadProviders() {
             <td>\${renderProviderState(provider)}</td>
             <td>\${provider.routable ? '<span class="badge badge-green">yes</span>' : '<span class="badge badge-red">no</span>'}</td>
             <td>\${provider.modelCount}</td>
-            <td>\${provider.lastLatencyMs > 0 ? provider.lastLatencyMs + 'ms' : 'Ã¢â‚¬â€'}</td>
+            <td>\${provider.lastLatencyMs > 0 ? provider.lastLatencyMs + 'ms' : 'not availableÂ'}</td>
             <td>\${provider.consecutiveFailures}\${provider.lastFailureType ? \`<div class="muted" style="font-size:11px;margin-top:4px">\${humanizeText(provider.lastFailureType)}</div>\` : ''}</td>
             <td>\${formatRecovery(provider)}</td>
-            <td class="muted" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\${provider.lastError ?? 'Ã¢â‚¬â€'}</td>
+            <td class="muted" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\${provider.lastError ?? 'not availableÂ'}</td>
             <td>
               \${canManageProviders
                 ? \`<button class="btn btn-secondary btn-sm" onclick="testProvider('\${provider.id}')">Test</button><button class="btn btn-secondary btn-sm" onclick="resetProvider('\${provider.id}')" style="margin-left:4px">Reset</button>\`
@@ -1146,7 +1146,7 @@ async function loadModels() {
             <td class="mono" style="font-size:12px">\${model.id}</td>
             <td>\${model.provider_id}</td>
             <td><span class="badge badge-muted">\${model.quality_tier}</span></td>
-            <td>\${model.context_window ? (model.context_window / 1024).toFixed(0) + 'K' : 'Ã¢â‚¬â€'}</td>
+            <td>\${model.context_window ? (model.context_window / 1024).toFixed(0) + 'K' : 'not availableÂ'}</td>
             <td style="font-size:11px">\${capsBadges(model.capabilities)}</td>
           </tr>
         \`).join('')}
@@ -1304,13 +1304,66 @@ async function loadControls() {
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Request Classifier Test</div>
+      <div class="card-title">Request Classifier and Route Preview</div>
       <div class="form-group">
         <label>Sample prompt</label>
         <textarea id="classify-input" rows="3" placeholder="Type a request to see how it gets classified..."></textarea>
       </div>
-      <button class="btn btn-secondary" onclick="classifyRequest()">Classify</button>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label>Route alias (optional)</label>
+          <select id="preview-route-alias">
+            <option value="">Auto</option>
+            <option value="fast-free">fast-free</option>
+            <option value="strong-free">strong-free</option>
+            <option value="strong-code">strong-code</option>
+            <option value="strong-long-context">strong-long-context</option>
+            <option value="local-fast">local-fast</option>
+            <option value="local-strong">local-strong</option>
+            <option value="premium-code">premium-code</option>
+            <option value="premium-review">premium-review</option>
+            <option value="frontier-manual">frontier-manual</option>
+            <option value="embeddings-fast">embeddings-fast</option>
+            <option value="embeddings-strong">embeddings-strong</option>
+            <option value="rerank-strong">rerank-strong</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Preferred provider (optional)</label>
+          <input id="preview-preferred-provider" placeholder="github-models">
+        </div>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label>Exact model (optional)</label>
+          <input id="preview-model" placeholder="gpt-4o-mini">
+        </div>
+        <div class="form-group">
+          <label>Stability</label>
+          <select id="preview-stability-level">
+            <option value="normal">normal</option>
+            <option value="strict">strict</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="toggle-label">
+            <span class="toggle"><input type="checkbox" id="preview-forbid-paid"><span class="toggle-slider"></span></span>
+            Exclude paid providers for this preview
+          </label>
+          <label class="toggle-label">
+            <span class="toggle"><input type="checkbox" id="preview-prefer-local"><span class="toggle-slider"></span></span>
+            Prefer local routes for this preview
+          </label>
+        </div>
+      </div>
+      <div class="flex gap-8">
+        <button class="btn btn-secondary" onclick="classifyRequest()">Classify</button>
+        <button class="btn btn-primary" onclick="previewRouteDecision()">Preview Route</button>
+      </div>
       <div id="classify-result" style="margin-top:8px"></div>
+      <div id="route-preview-result" style="margin-top:12px"></div>
     </div>
   \`;
 }
@@ -1331,9 +1384,159 @@ async function classifyRequest() {
       method: 'POST',
       body: JSON.stringify({ messages: [{ role: 'user', content: text }] }),
     });
-    document.getElementById('classify-result').innerHTML = \`<span class="badge badge-blue">\${res.classified_as}</span>\`;
+    document.getElementById('classify-result').innerHTML = '<span class="badge badge-blue">' + escapeHtml(res.classified_as) + '</span>';
   } catch (e) {
     alert('Error: ' + e);
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderModeFlagBadges(modes) {
+  const flags = [
+    { label: 'free_only', enabled: Boolean(modes?.freeOnly) },
+    { label: 'local_only', enabled: Boolean(modes?.localOnly) },
+    { label: 'premium_enabled', enabled: Boolean(modes?.premiumEnabled) },
+  ];
+
+  return flags.map(flag => '<span class="badge ' + (flag.enabled ? 'badge-blue' : 'badge-muted') + '">' + flag.label + ': ' + (flag.enabled ? 'on' : 'off') + '</span>').join(' ');
+}
+
+function renderRoutePreview(preview) {
+  const candidates = preview?.candidates ?? [];
+  const skipped = preview?.skipped ?? [];
+  const skipCounts = Object.entries(preview?.skipCounts ?? {}).sort((left, right) => right[1] - left[1]);
+  const priorityOrder = preview?.priorityOrder ?? [];
+  const stabilityLevel = preview?.stabilityLevel ?? 'normal';
+  const visibleSkipped = skipped.slice(0, 12);
+  const hiddenSkippedCount = Math.max(0, skipped.length - visibleSkipped.length);
+
+  const candidateRows = candidates.map((candidate, index) => {
+    const aliasList = (candidate.aliases ?? []).length
+      ? '<div class="muted mono" style="font-size:11px;margin-top:4px">' + (candidate.aliases ?? []).map(alias => escapeHtml(alias)).join(', ') + '</div>'
+      : '';
+    const matchBadgeClass = candidate.aliasMatch === 'exact'
+      ? 'badge-blue'
+      : candidate.aliasMatch === 'broadened'
+        ? 'badge-yellow'
+        : 'badge-muted';
+    const matchReason = candidate.aliasMatchReason
+      ? '<div class="muted" style="font-size:11px;margin-top:4px">' + escapeHtml(candidate.aliasMatchReason) + '</div>'
+      : '';
+
+    return '<tr>'
+      + '<td>' + (index + 1) + '</td>'
+      + '<td class="mono">' + escapeHtml(candidate.providerId) + '</td>'
+      + '<td><div class="mono">' + escapeHtml(candidate.modelId) + '</div>' + aliasList + '</td>'
+      + '<td>' + escapeHtml(candidate.qualityTier) + '</td>'
+      + '<td><span class="badge ' + matchBadgeClass + '">' + escapeHtml(candidate.aliasMatch) + '</span>' + matchReason + '</td>'
+      + '<td class="mono">' + Number(candidate.score ?? 0).toFixed(3) + '</td>'
+      + '<td>' + (candidate.isFree ? '<span class="badge badge-green">free</span>' : '<span class="badge badge-purple">paid</span>') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  const skipSummary = skipCounts.length
+    ? '<div class="quota-pill-list" style="margin-top:8px">'
+      + skipCounts.map(([reason, count]) => '<span class="badge badge-muted">' + escapeHtml(humanizeText(reason)) + ': ' + count + '</span>').join('')
+      + '</div>'
+    : '<div class="muted" style="margin-top:8px">No providers or models were skipped.</div>';
+
+  const priorityPills = priorityOrder.length
+    ? '<div class="quota-pill-list" style="margin-top:8px">'
+      + priorityOrder.map(providerId => '<span class="badge badge-blue">' + escapeHtml(providerId) + '</span>').join('')
+      + '</div>'
+    : '<div class="muted" style="margin-top:8px">Default scorer ordering.</div>';
+
+  const skippedTable = visibleSkipped.length
+    ? '<div style="overflow-x:auto">'
+      + '<table>'
+      + '<tr><th>Provider</th><th>Model</th><th>Reason</th><th>Detail</th></tr>'
+      + visibleSkipped.map(entry => '<tr>'
+        + '<td class="mono">' + escapeHtml(entry.providerId) + '</td>'
+        + '<td class="mono">' + escapeHtml(entry.modelId ?? 'not available') + '</td>'
+        + '<td>' + escapeHtml(humanizeText(entry.reason)) + '</td>'
+        + '<td>' + escapeHtml(entry.detail ?? (entry.score !== undefined ? ('score=' + Number(entry.score).toFixed(3)) : '')) + '</td>'
+        + '</tr>').join('')
+      + '</table>'
+      + '</div>'
+    : '<div class="muted">No detailed skips recorded.</div>';
+
+  return '<div class="card">'
+    + '<div class="card-title">Route Preview</div>'
+    + '<div class="mb-16">'
+    + '<div><strong>Classified as:</strong> <span class="badge badge-blue">' + escapeHtml(preview?.classifiedAs ?? 'unknown') + '</span>'
+    + (preview?.alias ? ' <span class="badge badge-purple">alias ' + escapeHtml(preview.alias) + '</span>' : '')
+    + '</div>'
+    + '<div style="margin-top:8px"><strong>Stability:</strong> <span class="badge badge-muted">' + escapeHtml(stabilityLevel) + '</span></div>'
+    + '<div style="margin-top:8px"><strong>Effective modes:</strong> ' + renderModeFlagBadges(preview?.effectiveModes) + '</div>'
+    + '</div>'
+    + '<div class="grid grid-2">'
+    + '<div>'
+    + '<div class="card-title">Candidate Order (' + candidates.length + ')</div>'
+    + (candidateRows
+      ? '<div style="overflow-x:auto"><table><tr><th>#</th><th>Provider</th><th>Model</th><th>Tier</th><th>Match</th><th>Score</th><th>Billing</th></tr>' + candidateRows + '</table></div>'
+      : '<div class="alert alert-warn">No candidates survived this route preview.</div>')
+    + '</div>'
+    + '<div>'
+    + '<div class="card-title">Priority and Skips</div>'
+    + '<div><strong>Priority order</strong>' + priorityPills + '</div>'
+    + '<div style="margin-top:12px"><strong>Skip summary</strong>' + skipSummary + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="margin-top:16px">'
+    + '<div class="card-title">Skipped Details</div>'
+    + skippedTable
+    + (hiddenSkippedCount > 0 ? '<div class="muted" style="margin-top:8px">Showing first ' + visibleSkipped.length + ' of ' + skipped.length + ' skipped entries.</div>' : '')
+    + '</div>'
+    + '</div>';
+}
+
+async function previewRouteDecision() {
+  const promptEl = document.getElementById('classify-input');
+  const resultEl = document.getElementById('route-preview-result');
+  const text = (promptEl?.value ?? '').trim();
+
+  if (!resultEl) return;
+  if (!text) {
+    resultEl.innerHTML = '<div class="alert alert-warn">Enter a sample prompt first.</div>';
+    return;
+  }
+
+  const alias = (document.getElementById('preview-route-alias')?.value ?? '').trim();
+  const preferredProvider = (document.getElementById('preview-preferred-provider')?.value ?? '').trim();
+  const model = (document.getElementById('preview-model')?.value ?? '').trim();
+  const stabilityLevel = (document.getElementById('preview-stability-level')?.value ?? 'normal').trim();
+  const forbidPaid = Boolean(document.getElementById('preview-forbid-paid')?.checked);
+  const preferLocal = Boolean(document.getElementById('preview-prefer-local')?.checked);
+  const payload = {
+    messages: [{ role: 'user', content: text }],
+  };
+
+  if (alias) payload.model_alias = alias;
+  if (preferredProvider) payload.preferred_provider = preferredProvider;
+  if (model) payload.model = model;
+  payload.stability_level = stabilityLevel || 'normal';
+  if (forbidPaid) payload.forbid_paid = true;
+  if (preferLocal) payload.prefer_local = true;
+
+  resultEl.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const res = await api('/v1/admin/force-route', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    resultEl.innerHTML = renderRoutePreview(res.preview);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    resultEl.innerHTML = '<div class="alert alert-error">Error: ' + escapeHtml(message) + '</div>';
   }
 }
 
@@ -1388,7 +1591,7 @@ async function loadDoctor() {
           <tr>
             <td>\${renderLevelBadge(check.level)}</td>
             <td>\${check.message}</td>
-            <td class="muted">\${check.details ?? 'Ã¢â‚¬â€'}</td>
+            <td class="muted">\${check.details ?? 'not availableÂ'}</td>
           </tr>
         \`).join('')}
       </table>
@@ -1402,11 +1605,11 @@ async function loadDoctor() {
             <td class="mono">\${provider.id}</td>
             <td>\${renderProviderState(provider)}</td>
             <td>\${provider.routable ? '<span class="badge badge-green">yes</span>' : '<span class="badge badge-red">no</span>'}</td>
-            <td>\${provider.lastFailureType ? \`<span class="badge badge-muted">\${humanizeText(provider.lastFailureType)}</span>\` : 'Ã¢â‚¬â€'}</td>
+            <td>\${provider.lastFailureType ? \`<span class="badge badge-muted">\${humanizeText(provider.lastFailureType)}</span>\` : 'not availableÂ'}</td>
             <td>\${formatRecovery(provider)}</td>
             <td>\${provider.modelCount}</td>
-            <td>\${provider.lastLatencyMs > 0 ? provider.lastLatencyMs + 'ms' : 'Ã¢â‚¬â€'}</td>
-            <td class="muted" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\${provider.lastError ?? 'Ã¢â‚¬â€'}</td>
+            <td>\${provider.lastLatencyMs > 0 ? provider.lastLatencyMs + 'ms' : 'not availableÂ'}</td>
+            <td class="muted" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">\${provider.lastError ?? 'not availableÂ'}</td>
           </tr>
         \`).join('')}
       </table>
@@ -1467,7 +1670,7 @@ async function loadTokens() {
             <td class="mono">\${token.projectId}</td>
             <td>\${token.readOnly ? 'yes' : 'no'}</td>
             <td>\${new Date(token.createdAt).toLocaleDateString()}</td>
-            <td>\${token.lastUsed ? new Date(token.lastUsed).toLocaleDateString() : 'Ã¢â‚¬â€'}</td>
+            <td>\${token.lastUsed ? new Date(token.lastUsed).toLocaleDateString() : 'not availableÂ'}</td>
             <td><button class="btn btn-danger btn-sm" onclick="revokeToken('\${token.id}')">Revoke</button></td>
           </tr>
         \`).join('')}
@@ -1599,7 +1802,7 @@ function formatRecovery(provider) {
   if (provider.status === 'recovering') {
     return '<span class="badge badge-blue">probe open</span>';
   }
-  return 'Ã¢â‚¬â€';
+  return 'not availableÂ';
 }
 
 function fmtDuration(ms) {
@@ -1617,7 +1820,7 @@ function fmtDuration(ms) {
 }
 
 function formatTimestamp(ts) {
-  if (!ts) return 'Ã¢â‚¬â€';
+  if (!ts) return 'not availableÂ';
   return new Date(ts).toLocaleTimeString();
 }
 
@@ -1649,3 +1852,7 @@ setInterval(() => {
 </body>
 </html>`;
 }
+
+
+
+

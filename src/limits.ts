@@ -323,7 +323,7 @@ function buildSnapshotBackedState(params: {
   };
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Record usage Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Record usage
 export function recordUsage(params: {
   providerId: string;
   modelId?: string;
@@ -370,7 +370,7 @@ export function recordUsage(params: {
   })();
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Get current window usage Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Get current window usage
 export function getCurrentUsage(
   providerId: string,
   metricKind: QuotaMetricKind,
@@ -398,7 +398,7 @@ export function getCurrentUsage(
   };
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Check if a provider is available (not exhausted, not cooling down) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Check if a provider is available (not exhausted, not cooling down)
 export function isProviderAvailable(providerId: string, model?: ModelInfo): boolean {
   if (!model?.limitConfig) return true;
 
@@ -410,7 +410,7 @@ export function isProviderAvailable(providerId: string, model?: ModelInfo): bool
   return true;
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Get limit states for a provider Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Get limit states for a provider
 export function getProviderLimitStates(
   providerId: string,
   limitConfig: Partial<ProviderLimitConfig>,
@@ -534,10 +534,10 @@ export function buildFreeUsageSummary(sources: FreeUsageModelSource[]): FreeUsag
   const sectionSummaries = FREE_USAGE_SECTION_ORDER.map(key => buildFreeUsageSection(key, sections.get(key) ?? []));
   const allServices = sectionSummaries.flatMap(section => section.services);
   const trackedServiceCount = allServices.filter(service => service.windows.length > 0).length;
-  const strongChatCount = allServices.filter(service => service.serviceClass === 'strong_chat').length;
-  const fastChatCount = allServices.filter(service => service.serviceClass === 'fast_chat').length;
+  const exactCount = allServices.filter(service => service.primaryWindow?.remainingKind === 'exact').length;
+  const headroomCount = allServices.filter(service => service.primaryWindow?.remainingKind === 'hub_headroom' || service.primaryWindow?.remainingKind === 'estimate').length;
+  const ceilingOnlyCount = allServices.filter(service => service.primaryWindow?.remainingKind === 'unknown').length;
   const unknownCount = sectionSummaries.find(section => section.key === 'unknown')?.serviceCount ?? 0;
-  const estimatedCount = sectionSummaries.find(section => section.key === 'estimated')?.serviceCount ?? 0;
 
   return {
     generatedAt: Date.now(),
@@ -545,22 +545,22 @@ export function buildFreeUsageSummary(sources: FreeUsageModelSource[]): FreeUsag
     trackedServiceCount,
     summaryCards: [
       {
-        key: 'strong-chat',
-        label: 'Strong Chat',
-        value: strongChatCount,
-        description: 'Higher-end free chat and code lanes kept visible on the board.',
+        key: 'exact-remaining',
+        label: 'Exact Remaining',
+        value: exactCount,
+        description: 'Vendor-reported remaining quota from provider-synced signals.',
       },
       {
-        key: 'fast-chat',
-        label: 'Fast Chat',
-        value: fastChatCount,
-        description: 'Smaller or faster free chat lanes that still have visible headroom.',
+        key: 'hub-headroom',
+        label: 'Hub Headroom',
+        value: headroomCount,
+        description: 'Headroom computed from hub traffic against the configured ceiling.',
       },
       {
-        key: 'estimated',
-        label: 'Estimated Limits',
-        value: estimatedCount,
-        description: 'Observed or inferred ceilings. Treat remaining values as guidance.',
+        key: 'ceiling-only',
+        label: 'Ceiling Only',
+        value: ceilingOnlyCount,
+        description: 'Published ceilings with no trustworthy live remaining signal yet.',
       },
       {
         key: 'unknown',
@@ -628,7 +628,6 @@ function buildFreeUsageNotes(
   primaryWindow: FreeUsageWindowSummary | null,
 ): string[] {
   const notes: string[] = [];
-
   if (!primaryWindow) {
     notes.push('No quota window is configured for this service yet.');
   } else {
@@ -638,12 +637,18 @@ function buildFreeUsageNotes(
       notes.push('Ceilings are observed or inferred rather than provider-documented.');
     } else if (primaryWindow.remainingKind === 'exact') {
       notes.push('Remaining values come from provider-reported quota data.');
+    } else if (primaryWindow.remainingKind === 'unknown') {
+      notes.push('This row shows the published ceiling only; live remaining is not available yet.');
     }
 
     if (primaryWindow.poolScope === 'provider') {
       notes.push('This quota is tracked as a provider-wide pool shared across models.');
     } else if (primaryWindow.poolScope === 'shared') {
       notes.push('This quota is treated as a shared pool rather than a model-specific counter.');
+    }
+
+    if (primaryWindow.metricKind === 'provider_units' && primaryWindow.remainingKind !== 'exact') {
+      notes.push('Provider-unit quotas like neurons only become live remaining after provider-reported usage is available.');
     }
   }
 
@@ -717,9 +722,12 @@ function compareLimitStates(a: FreeUsageWindowSummary, b: FreeUsageWindowSummary
   const ratioDelta = getRemainingRatio(a) - getRemainingRatio(b);
   if (Math.abs(ratioDelta) > 0.000001) return ratioDelta;
 
+  const windowDelta = DISPLAY_WINDOW_ORDER.indexOf(a.windowType) - DISPLAY_WINDOW_ORDER.indexOf(b.windowType);
+  if (windowDelta !== 0) return windowDelta;
+
   if (a.remainingPct !== b.remainingPct) return a.remainingPct - b.remainingPct;
   if (a.remaining !== b.remaining) return a.remaining - b.remaining;
-  return DISPLAY_WINDOW_ORDER.indexOf(a.windowType) - DISPLAY_WINDOW_ORDER.indexOf(b.windowType);
+  return a.windowLabel.localeCompare(b.windowLabel);
 }
 
 function compareFreeUsageModels(a: FreeUsageModelSummary, b: FreeUsageModelSummary): number {
@@ -739,7 +747,7 @@ function compareFreeUsageModels(a: FreeUsageModelSummary, b: FreeUsageModelSumma
   return a.modelName.localeCompare(b.modelName);
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Mark a cooldown (e.g., after 429 response) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Mark a cooldown (e.g., after 429 response)
 export function recordCooldown(providerId: string, durationMs: number): void {
   const db = getDb();
   const until = Date.now() + durationMs;
@@ -775,7 +783,7 @@ export function getCooldownUntil(providerId: string): number | null {
   return until;
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Warning percentages Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Warning percentages
 export interface UsageWarning {
   providerId: string;
   modelId?: string;

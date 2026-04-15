@@ -32,10 +32,28 @@ const DEFAULT_MODELS: ModelInfo[] = [
     contextWindow: 8192,
     maxOutputTokens: 4096,
     capabilities: CAPABILITIES,
-    aliases: ['local-fast', 'local-strong'],
+    aliases: ['local-fast', 'local-strong', 'strong-free'],
     isFree: true,
   },
 ];
+
+function buildLocalAliases(modelId: string, modelName?: string): string[] {
+  const haystack = `${modelId} ${modelName ?? ''}`.toLowerCase();
+  const aliases = new Set<string>(['local-fast', 'local-strong']);
+
+  const looksCodeFocused = /(coder|codestral|devstral|deepseek-coder|qwen.*coder|codegemma|starcoder|codellama|phi-4-mini|phi-4|granite-code)/.test(haystack);
+  const looksStrongGeneral = /(70b|72b|123b|235b|405b|mixtral|mistral-large|qwen2\.5-72b|qwen3|deepseek-r1|r1|llama-3\.3|llama3\.3|llama-4|gpt-oss-20b|gpt-oss-120b)/.test(haystack);
+
+  if (looksCodeFocused) {
+    aliases.add('strong-code');
+  }
+
+  if (looksStrongGeneral || looksCodeFocused || haystack.includes('instruct')) {
+    aliases.add('strong-free');
+  }
+
+  return [...aliases];
+}
 
 export class LocalAdapter extends OpenAICompatAdapter {
   constructor() {
@@ -74,7 +92,7 @@ export class LocalAdapter extends OpenAICompatAdapter {
         contextWindow: 32768,
         maxOutputTokens: 8192,
         capabilities: CAPABILITIES,
-        aliases: [],
+        aliases: buildLocalAliases(id, id),
         isFree: true,
       }));
     } else {
@@ -85,6 +103,7 @@ export class LocalAdapter extends OpenAICompatAdapter {
           this._models = fetched.map(m => ({
             ...m,
             qualityTier: 'tier_local_basic' as const,
+            aliases: [...new Set([...(m.aliases ?? []), ...buildLocalAliases(m.id, m.name)])],
             isFree: true,
           }));
         }

@@ -5,6 +5,7 @@ data/*.db-wal
 data/*.db-shm
 logs/
 .env
+.env.backup.*
 *.env.local
 *.env.production
 .DS_Store

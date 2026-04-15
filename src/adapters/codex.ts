@@ -135,8 +135,49 @@ export class CodexAdapter extends OpenAICompatAdapter {
     }
 
     this.mode = 'cli';
-    this._models = CLI_MODELS;
+    // Try to discover CLI models, fall back to defaults (Fix 3)
+    const discoveredModels = await this.discoverCliModels();
+    this._models = discoveredModels.length > 0 ? discoveredModels : CLI_MODELS;
     this._authenticated = await this.isCliLoggedIn();
+  }
+
+  private async discoverCliModels(): Promise<ModelInfo[]> {
+    try {
+      const result = await this.runCodex(['--list-models'], undefined, process.cwd(), Math.min(this.cliTimeoutMs, 15_000));
+      if (result.timedOut || result.code !== 0) {
+        return []; // Fall back to defaults on failure
+      }
+
+      const models: ModelInfo[] = [];
+      const lines = result.stdout.split(/\r?\n/).filter(line => line.trim());
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+
+        // Parse model line: "codex-free" or "codex-pro" or similar
+        const modelId = trimmed.split(/\s+/)[0];
+        if (!modelId) continue;
+
+        const isFreeModel = modelId.includes('free') || modelId.includes('fast');
+        const model: ModelInfo = {
+          id: modelId,
+          providerId: 'codex',
+          name: `${modelId} (Codex CLI)`,
+          qualityTier: isFreeModel ? 'tier_free_strong' : 'tier_membership_premium',
+          contextWindow: 200_000,
+          maxOutputTokens: isFreeModel ? 16_384 : 100_000,
+          capabilities: CLI_CAPS,
+          aliases: isFreeModel ? ['strong-free'] : ['premium-code', 'premium-review', 'frontier-manual'],
+          isFree: isFreeModel,
+        };
+        models.push(model);
+      }
+
+      return models.length > 0 ? models : [];
+    } catch {
+      return []; // Fall back to defaults on error
+    }
   }
 
   override async healthCheck(): Promise<import('./base').HealthCheckResult> {

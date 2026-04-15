@@ -140,8 +140,16 @@ export class CopilotAdapter extends BaseAdapter {
   readonly capabilities = CAPS;
   readonly qualityTier = 'tier_membership_premium' as const;
   readonly defaultLimitConfig: ProviderLimitConfig = {
-    rpm: 50, rpd: null, tpm: null, tpd: null,
-    monthlyRequests: null, monthlyTokens: null, confidence: 'inferred',
+    rpm: null,
+    rpd: null,
+    tpm: null,
+    tpd: null,
+    monthlyRequests: 1_500,
+    monthlyTokens: null,
+    confidence: 'official',
+    poolScope: 'provider',
+    poolKey: 'copilot-pro-plus',
+    sourceLabel: 'GitHub Copilot Pro+ premium request allowance',
   };
 
   private sessionToken: string | null = null;

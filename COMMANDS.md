@@ -14,6 +14,23 @@ start.bat
 stop.bat
 ```
 
+### Windows stack packages
+
+```bat
+setup-openclaw.bat
+npm.cmd run setup:openclaw
+```
+
+Use `setup-openclaw.bat` as the default Windows entry point. In a PowerShell session, prefer `npm.cmd` over `npm` if you want the npm script path.
+
+OpenClaw package examples:
+
+```bat
+setup-openclaw.bat -StartQdrant
+setup-openclaw.bat -OpenClawBaseUrl http://127.0.0.1:3001 -StartQdrant -StartHub
+setup-openclaw.bat -QdrantMode adopt -QdrantBaseUrl http://127.0.0.1:6333
+```
+
 ### Tail logs
 
 ```powershell
@@ -108,6 +125,7 @@ npm run typecheck
 npm run doctor
 npm run doctor -- --json
 npm run clean
+npm run setup:openclaw
 ```
 
 `npm run doctor` prints a human-readable diagnostics report. Add `-- --json` to emit machine-readable JSON.

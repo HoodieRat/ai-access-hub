@@ -117,7 +117,7 @@ export class GeminiAdapter extends BaseAdapter {
     const cfg = getConfig();
     const pCfg = cfg.providers.gemini;
     this._enabled = pCfg.enabled;
-    this.apiKey = pCfg.apiKey ?? '';
+    this.apiKey = pCfg.apiKey?.trim() ?? '';
     this._authenticated = !!this.apiKey;
   }
 
@@ -125,10 +125,25 @@ export class GeminiAdapter extends BaseAdapter {
     if (!this.apiKey) return { healthy: false, latencyMs: 0, error: 'No API key' };
     const start = Date.now();
     try {
-      const url = `${BASE_URL}/models?key=${this.apiKey}`;
-      const resp = await doFetch(url, { timeoutMs: 10_000 });
+      const modelId = 'gemini-2.0-flash';
+      const url = `${BASE_URL}/models/${modelId}:generateContent?key=${this.apiKey}`;
+      const resp = await doFetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: 'health check' }] }],
+          generationConfig: { maxOutputTokens: 1 },
+        }),
+        timeoutMs: 10_000,
+      });
       const latencyMs = Date.now() - start;
-      return { healthy: resp.ok, latencyMs, error: resp.ok ? undefined : `HTTP ${resp.status}` };
+      const text = resp.ok ? '' : await resp.text().catch(() => '');
+      return {
+        healthy: resp.ok,
+        latencyMs,
+        error: resp.ok ? undefined : `HTTP ${resp.status}${text ? ` – ${text.slice(0, 200)}` : ''}`,
+        failureType: resp.ok ? undefined : classifyHttpError(resp.status, text),
+      };
     } catch (e) {
       return { healthy: false, latencyMs: Date.now() - start, error: String(e) };
     }

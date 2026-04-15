@@ -33,6 +33,7 @@ function resolveDir(raw: string): string {
 export interface ProviderConfig {
   enabled: boolean;
   apiKey?: string;
+  chatEnabled?: boolean;
   baseUrl?: string;
   models?: string[];
   accountId?: string;
@@ -57,6 +58,10 @@ export interface HubConfig {
   freeOnly: boolean;
   localOnly: boolean;
   premiumEnabled: boolean;
+
+  // Routing configuration (Fix 5)
+  providerFallbackOrder: string[];
+  preflightTimeoutMs: number;
 
   // Providers
   providers: Record<string, ProviderConfig>;
@@ -93,6 +98,13 @@ function buildConfig(): HubConfig {
     freeOnly: envBool('FREE_ONLY_MODE', false),
     localOnly: envBool('LOCAL_ONLY_MODE', false),
     premiumEnabled: envBool('PREMIUM_ENABLED', false),
+
+    // Routing configuration (Fix 5)
+    providerFallbackOrder: env('PROVIDER_FALLBACK_ORDER', 'github-models,codex,mistral,groq,gemini,cerebras,cloudflare,openrouter,sambanova,cohere,local')
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p.length > 0),
+    preflightTimeoutMs: envInt('PREFLIGHT_TIMEOUT_MS', 2000),
 
     providers: {
       local: {
@@ -139,6 +151,7 @@ function buildConfig(): HubConfig {
       cohere: {
         enabled: envBool('COHERE_ENABLED', false),
         apiKey: env('COHERE_API_KEY'),
+        chatEnabled: envBool('COHERE_CHAT_ENABLED', false),
       },
       fireworks: {
         enabled: envBool('FIREWORKS_ENABLED', false),
