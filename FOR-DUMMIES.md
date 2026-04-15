@@ -35,6 +35,8 @@ Good default aliases:
 - `strong-long-context` for large-context work.
 - `embeddings-strong` for embeddings.
 
+If you are using Hermes for long game-planning runs and want AFK automation, use the repo AFK runner scripts (`npm run hermes:afk:rpg` or `npm run hermes:afk`). That behavior is opt-in only and does not change normal Hermes project behavior.
+
 ---
 
 ## What The Dashboard Numbers Mean

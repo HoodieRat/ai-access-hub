@@ -11,6 +11,8 @@
     "setup:openclaw": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\setup\\windows\\openclaw\\setup-openclaw.ps1",
     "repair:openclaw": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\setup\\windows\\openclaw\\repair-openclaw-patches.ps1",
     "doctor": "tsx src/doctor.ts",
+    "hermes:afk": "node scripts/hermes-afk-runner.cjs",
+    "hermes:afk:rpg": "node scripts/hermes-afk-runner.cjs --preset rpg --prompt-file rpg-master-prompt.txt --log-file hermes-rpg-afk.log",
     "smoke:game": "node scripts/smoke-game-generation.js",
     "validate:providers": "tsx scripts/validate-providers.ts",
     "test": "npm run test:quota && npm run test:dashboard",

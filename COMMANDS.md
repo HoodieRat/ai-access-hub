@@ -60,6 +60,14 @@ Invoke-RestMethod http://127.0.0.1:3099/v1/admin/reset-provider -Method Post -He
 Invoke-RestMethod http://127.0.0.1:3099/v1/admin/shutdown -Method Post -Headers $headers -Body '{}'
 ```
 
+### Hermes AFK runner (opt-in)
+
+```powershell
+.\run-hermes-rpg-afk.ps1
+npm run hermes:afk:rpg
+npm run hermes:afk -- --prompt-file .\your-prompt.txt --auto-continue --max-continues 12 --done-marker YOUR_DONE_MARKER
+```
+
 ---
 
 ## Linux / macOS
@@ -112,6 +120,14 @@ curl -X POST http://127.0.0.1:3099/v1/admin/shutdown \
   -d '{}'
 ```
 
+### Hermes AFK runner (opt-in)
+
+```sh
+bash ./run-hermes-rpg-afk.sh
+npm run hermes:afk:rpg
+npm run hermes:afk -- --prompt-file ./your-prompt.txt --auto-continue --max-continues 12 --done-marker YOUR_DONE_MARKER
+```
+
 ---
 
 ## npm Scripts
@@ -124,6 +140,8 @@ npm run verify
 npm run typecheck
 npm run doctor
 npm run doctor -- --json
+npm run hermes:afk
+npm run hermes:afk:rpg
 npm run clean
 npm run setup:openclaw
 ```
