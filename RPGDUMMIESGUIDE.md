@@ -156,6 +156,7 @@ If your session still pauses for `continue`, use the opt-in AFK runner in this r
 Important:
 - This is explicitly opt-in.
 - Regular Hermes projects are unchanged unless you run the AFK script/command.
+- This repo can supervise Hermes runs and recover more safely, but it does not remove Hermes core sandbox/tool/provider restrictions.
 
 ### AFK Runner (PowerShell)
 
@@ -169,6 +170,7 @@ Or via npm:
 
 ```powershell
 npm run hermes:afk:rpg
+npm run hermes:afk:caveman
 ```
 
 ### AFK Runner (WSL/Linux)
@@ -183,6 +185,7 @@ Or via npm:
 
 ```bash
 npm run hermes:afk:rpg
+npm run hermes:afk:caveman
 ```
 
 The runner behavior:
@@ -192,10 +195,32 @@ The runner behavior:
 - Stops when it sees `RPG_PLAN_COMPLETE`
 - Writes all output to `hermes-rpg-afk.log`
 
+The caveman preset adds extra guardrails for brittle codegen runs:
+- Prepends a conservative execution prompt
+- Detects hard failure patterns such as empty model responses and repeated tool errors
+- Sends one bounded recovery prompt instead of blindly continuing
+- Stops cleanly if the run is still unstable
+
+Use caveman mode when you are doing large game scaffolds, project recovery, or package/config edits late in a long run:
+
+```powershell
+.\run-hermes-rpg-afk.ps1 -Preset caveman
+```
+
+```bash
+bash ./run-hermes-rpg-afk.sh rpg-master-prompt.txt 12 hermes-caveman-afk.log caveman
+```
+
 If you need this for non-RPG work, use the generic command:
 
 ```bash
 npm run hermes:afk -- --prompt-file ./your-prompt.txt --auto-continue --max-continues 12 --done-marker YOUR_DONE_MARKER
+```
+
+If you want the runner to attempt a single conservative recovery pass immediately, use:
+
+```bash
+npm run hermes:afk:recover
 ```
 
 ---

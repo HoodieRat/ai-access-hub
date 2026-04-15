@@ -100,7 +100,7 @@ chmod +x install.sh start.sh
 
 Then open **http://127.0.0.1:3099/dashboard**
 
-For Hermes game-planning sessions, this repo includes an opt-in AFK runner that auto-sends `continue` only when you explicitly invoke it. It does not alter default Hermes behavior for normal projects.
+For Hermes game-planning sessions, this repo includes an opt-in AFK runner that can auto-send `continue`, detect hard failure patterns, and switch to a conservative caveman recovery mode when you explicitly invoke it. It does not alter default Hermes behavior for normal projects.
 
 Quick usage:
 
@@ -108,11 +108,19 @@ Quick usage:
 npm run hermes:afk:rpg
 ```
 
+Conservative game-recovery usage:
+
+```sh
+npm run hermes:afk:caveman
+```
+
 Generic usage:
 
 ```sh
 npm run hermes:afk -- --prompt-file ./your-prompt.txt --auto-continue --max-continues 12 --done-marker YOUR_DONE_MARKER
 ```
+
+Scope boundary: these scripts supervise Hermes sessions from outside. They do not remove Hermes core sandbox/tool/provider restrictions.
 
 If you are building the Windows OpenClaw stack rather than only the hub, see [SETUP.md](SETUP.md) and [FOR-DUMMIES.md](FOR-DUMMIES.md) for the new setup package flow.
 

@@ -13,6 +13,8 @@
     "doctor": "tsx src/doctor.ts",
     "hermes:afk": "node scripts/hermes-afk-runner.cjs",
     "hermes:afk:rpg": "node scripts/hermes-afk-runner.cjs --preset rpg --prompt-file rpg-master-prompt.txt --log-file hermes-rpg-afk.log",
+    "hermes:afk:caveman": "node scripts/hermes-afk-runner.cjs --preset caveman --prompt-file rpg-master-prompt.txt --log-file hermes-caveman-afk.log",
+    "hermes:afk:recover": "node scripts/hermes-afk-runner.cjs --preset caveman --prompt-file rpg-master-prompt.txt --log-file hermes-caveman-recover.log --max-continues 0 --max-recoveries 1",
     "smoke:game": "node scripts/smoke-game-generation.js",
     "validate:providers": "tsx scripts/validate-providers.ts",
     "test": "npm run test:quota && npm run test:dashboard",

@@ -1,0 +1,12 @@
+Recovery mode engaged.
+
+Do not continue the previous broad implementation blindly.
+
+Next actions:
+1. Summarize the last concrete failure in one short paragraph.
+2. Identify the single file or single blocker that caused it.
+3. Re-read only the exact file you need before any further patch.
+4. Attempt one narrow recovery step only.
+5. If recovery is not possible, stop and emit the exact line CAVEMAN_STOP.
+
+Do not restart the whole project. Recover from the current point only.

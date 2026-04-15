@@ -35,7 +35,7 @@ Good default aliases:
 - `strong-long-context` for large-context work.
 - `embeddings-strong` for embeddings.
 
-If you are using Hermes for long game-planning runs and want AFK automation, use the repo AFK runner scripts (`npm run hermes:afk:rpg` or `npm run hermes:afk`). That behavior is opt-in only and does not change normal Hermes project behavior.
+If you are using Hermes for long game-planning runs and want AFK automation, use the repo AFK runner scripts (`npm run hermes:afk:rpg`, `npm run hermes:afk:caveman`, or `npm run hermes:afk`). That behavior is opt-in only and does not change normal Hermes project behavior. The runner can stop on empty-model/tool-failure patterns and switch to a conservative recovery prompt, but it does not remove Hermes core restrictions.
 
 ---
 

@@ -64,7 +64,10 @@ Invoke-RestMethod http://127.0.0.1:3099/v1/admin/shutdown -Method Post -Headers 
 
 ```powershell
 .\run-hermes-rpg-afk.ps1
+.\run-hermes-rpg-afk.ps1 -Preset caveman
 npm run hermes:afk:rpg
+npm run hermes:afk:caveman
+npm run hermes:afk:recover
 npm run hermes:afk -- --prompt-file .\your-prompt.txt --auto-continue --max-continues 12 --done-marker YOUR_DONE_MARKER
 ```
 
@@ -124,7 +127,10 @@ curl -X POST http://127.0.0.1:3099/v1/admin/shutdown \
 
 ```sh
 bash ./run-hermes-rpg-afk.sh
+bash ./run-hermes-rpg-afk.sh rpg-master-prompt.txt 12 hermes-caveman-afk.log caveman
 npm run hermes:afk:rpg
+npm run hermes:afk:caveman
+npm run hermes:afk:recover
 npm run hermes:afk -- --prompt-file ./your-prompt.txt --auto-continue --max-continues 12 --done-marker YOUR_DONE_MARKER
 ```
 
@@ -142,9 +148,13 @@ npm run doctor
 npm run doctor -- --json
 npm run hermes:afk
 npm run hermes:afk:rpg
+npm run hermes:afk:caveman
+npm run hermes:afk:recover
 npm run clean
 npm run setup:openclaw
 ```
+
+`npm run hermes:afk:caveman` enables conservative failure detection and one-shot recovery prompting for brittle game-generation runs.
 
 `npm run doctor` prints a human-readable diagnostics report. Add `-- --json` to emit machine-readable JSON.
 `npm test` runs the automated regression suites. `npm run verify` is the full release gate: typecheck, build, then tests.
